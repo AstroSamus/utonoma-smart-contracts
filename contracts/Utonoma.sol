@@ -64,9 +64,9 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
         _updateContent(content, id);
         _logUserInteraction(block.timestamp, _startTimeOfTheNetwork);
         
-        _collectFee(fee);
-
         emit liked(id.index, uint256(id.contentType));
+
+        _collectFee(fee);
     }
 
     /// @dev adds one to the likes count of the content
