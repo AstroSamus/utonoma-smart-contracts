@@ -65,7 +65,7 @@ contract Users is Utils {
     */
     /// @param proposedUserName it's the username that wants to be registered
     /// @param metadata bytes32 of a CID containing the additional information of the user, set it to 0x0 to not incluide it
-    function createUser(bytes15 proposedUserName, bytes32 metadata) public {
+    function createUser(bytes15 proposedUserName, bytes32 metadata) public virtual {
         isValidUserName(proposedUserName);
         require(getUserProfile(msg.sender).userName == bytes15(0), "Account already have a username");
         require(getUserNameOwner(proposedUserName) == address(0), "Username isn't available");
@@ -83,7 +83,7 @@ contract Users is Utils {
     */
     /// @param metadata is the new metadata information that will overwrite the existing one
     /// @dev overwrites the userMetadataHash of the msg sender in the _users mapping
-    function updateUserMetadataHash(bytes32 metadata) public {
+    function updateUserMetadataHash(bytes32 metadata) public virtual {
         _users[msg.sender].userMetadataHash = metadata;
     }
 

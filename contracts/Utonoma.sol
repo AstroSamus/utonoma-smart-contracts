@@ -3,7 +3,9 @@
 pragma solidity 0.8.22;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Pausable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ContentStorage} from "contracts/ContentStorage.sol";
 import {Users} from "contracts/Users.sol";
 import {Time} from "contracts/Time.sol";
@@ -18,7 +20,7 @@ import {Time} from "contracts/Time.sol";
 * contract is not aware of the ERC20 logic. Use other contracts to create a separation of concerns and use 
 * this contract to build the wanted business logic from all the different modules in the other contracts.
 */
-contract Utonoma is ERC20, ContentStorage, Users, Time {
+contract Utonoma is ERC20Pausable, ContentStorage, Users, Time {
     
     address internal _owner;
 
@@ -32,7 +34,7 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
     * @notice in case that the user has strikes, it will have to pay the respective fee, this call 
     * counts as a user interaction
     */ 
-    function upload(bytes32 contentHash, bytes32 metadataHash, ContentTypes contentType) external returns(Identifier memory) {
+    function upload(bytes32 contentHash, bytes32 metadataHash, ContentTypes contentType) external whenNotPaused returns(Identifier memory) {
         uint64 strikes = getUserProfile(msg.sender).strikes;
         if(strikes > 0) { //if content creator has strikes it will have to pay the fee
             _collectFee(calculateFeeForUsersWithStrikes(strikes, currentPeriodMAU()));
@@ -56,7 +58,7 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
 
     /// @dev adds one to the likes count of the content
     /// @notice this call counts as a user interaction
-    function like(Identifier calldata id) external {
+    function like(Identifier calldata id) external whenNotPaused {
         _collectFee(calculateFee(currentPeriodMAU()));
         Content memory content = getContentById(id);
         content.likes++;
@@ -67,7 +69,7 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
 
     /// @dev adds one to the likes count of the content
     /// @notice this call counts as a user interaction
-    function dislike(Identifier calldata id) external {
+    function dislike(Identifier calldata id) external whenNotPaused {
         _collectFee(calculateFee(currentPeriodMAU()));
         Content memory content = getContentById(id);
         content.dislikes++;
@@ -82,7 +84,7 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
     * harvested likes it's the number of likes that where already cashed
     */
     /// @notice if a content gets a dislike, lesser the amount of the granted tokens will be
-    function harvestLikes(Identifier calldata id) external {
+    function harvestLikes(Identifier calldata id) external whenNotPaused {
         Content memory content = getContentById(id);
         require(content.likes > content.dislikes, "Likes should be greater than dislikes");
         require(shouldContentBeEliminated(content.likes, content.dislikes) == false, "Content should be eliminated");
@@ -97,7 +99,7 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
     }
 
     /// @dev validates and deletes a content from the content library and adds a strike to the creator's user profile
-    function deletion(Identifier calldata id) external {
+    function deletion(Identifier calldata id) external whenNotPaused {
         Content memory content = getContentById(id);
         require(shouldContentBeEliminated(content.likes, content.dislikes));
         _deleteContent(id);
@@ -107,7 +109,7 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
 
     /// @dev This method allows the user to delete content that they uploaded
     /// @notice only the creator can delete it
-    function voluntarilyDelete(Identifier calldata id) external {        
+    function voluntarilyDelete(Identifier calldata id) external whenNotPaused {        
         require(msg.sender == getContentById(id).contentOwner, "Only the content owner can voluntarily delete it");
         _deleteContent(id);
     }
@@ -115,14 +117,14 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
     /// @dev adds a content to the reply list of other content
     /// @param replyId it is the id of the content that works as a reply to other content
     /// @param replyingToId it is the id of the content that is being replied
-    function reply(Identifier calldata replyId, Identifier calldata replyingToId) external {
+    function reply(Identifier calldata replyId, Identifier calldata replyingToId) external whenNotPaused {
         require(msg.sender == getContentById(replyId).contentOwner, "Only the owner of the content can use it as a reply");
         _createReply(replyId, replyingToId);
         emit replied(replyId.index, uint256(replyId.contentType), replyingToId.index, uint256(replyingToId.contentType));
     }
 
     /// @dev allows the contract's owner to withdraw all the gathered fees
-    function withdraw() external {
+    function withdraw() external whenNotPaused {
         require(msg.sender == _owner, "Only the owner can withdraw");
         uint256 maxBalance = IERC20(address(this)).balanceOf(address(this));
         require(maxBalance > 0, "Nothing to withdraw");
@@ -137,6 +139,22 @@ contract Utonoma is ERC20, ContentStorage, Users, Time {
         require(IERC20(address(this)).transferFrom(msg.sender, address(this), fee),
             "Transfer failed");
         _burn(address(this), calculateFeeToBurn(fee));
+    }
+
+    /// @notice The _pause method is comming from the ERC20Pausable that inherits from Pausable
+    function pause() external {
+        require(msg.sender == _owner, "Only the owner can pause");
+        _pause();
+    }
+
+    /// @dev Overrides the createUser method to use the whenNotPaused modifier
+    function createUser(bytes15 proposedUserName, bytes32 metadata) public override whenNotPaused {
+        super.createUser(proposedUserName, metadata);
+    }
+
+    /// @dev Overrides the updateUserMetadataHash method to use the whenNotPaused modifier
+    function updateUserMetadataHash(bytes32 metadata) public override whenNotPaused {
+        super.updateUserMetadataHash(metadata);
     }
 
     /**
