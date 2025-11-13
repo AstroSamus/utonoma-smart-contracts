@@ -64,6 +64,7 @@ contracts-exposed
 # Remix
 .deps/
 .states/
+cache/
 
 # Foundry
 /out
@@ -74,3 +75,12 @@ contracts-exposed
 .last_confs
 certora_*
 .zip-output-url.txt
+
+# Frontend
+node_modules/
+.cache/
+dist/
+.env
+.DS_Store
+coverage/
+.vscode/
