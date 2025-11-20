@@ -7,5 +7,6 @@ module.exports = {
     sources: "./contracts",
     cache: "./cache",
     artifacts: "./artifacts",
+    tests: "./tests",
   },
 };
