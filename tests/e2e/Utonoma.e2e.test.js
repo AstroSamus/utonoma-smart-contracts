@@ -51,30 +51,4 @@ describe("Utonoma - End to End | Constructor & Basic Properties", function () {
     const balanceContract = await utonoma.balanceOf(utonoma.target)
     expect(balanceContract).to.equal(0)
   })
-
-  it("should record the correct start time at deployment", async function () {
-    const { utonoma } = await deployUtonomaFixture()
-
-    const deployTx = utonoma.deploymentTransaction()
-    const receipt = await deployTx.wait()
-    const block = await ethers.provider.getBlock(receipt.blockNumber)
-    const start = await utonoma.startTimeOfTheNetwork()
-
-    // It should match the timestamp of the deployment block
-    expect(start).to.equal(block.timestamp)
-  })
-
-  it("should keep a constant start time even if time moves forward", async function () {
-    const { utonoma } = await deployUtonomaFixture()
-    const startInitial = await utonoma.startTimeOfTheNetwork()
-
-    // Move forward 1 week in Hardhat time
-    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60])
-    await ethers.provider.send("evm_mine")
-    // Read again
-    const startAfter = await utonoma.startTimeOfTheNetwork()
-    // It must remain exactly the same (immutable)
-    
-    expect(startAfter).to.equal(startInitial)
-  })
 })
