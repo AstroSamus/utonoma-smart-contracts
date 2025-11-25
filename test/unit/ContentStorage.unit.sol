@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 import "forge-std/Test.sol";
-import {ContentStorage} from "../contracts/ContentStorage.sol";
+import {ContentStorage} from "../../contracts/ContentStorage.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 abstract contract Comparators {
