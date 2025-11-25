@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 import "forge-std/Test.sol";
-import {Utils} from "../contracts/Utils.sol";
+import {Utils} from "../../contracts/Utils.sol";
 
 contract UtilsTest is Test {
     Utils utils;
