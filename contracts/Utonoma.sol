@@ -86,8 +86,8 @@ contract Utonoma is ERC20Pausable, ContentStorage, Users, Time {
     /// @notice if a content gets a dislike, lesser the amount of the granted tokens will be
     function harvestLikes(Identifier calldata id) external whenNotPaused {
         Content memory content = getContentById(id);
-        require(content.likes > content.dislikes, "Likes should be greater than dislikes");
         require(shouldContentBeEliminated(content.likes, content.dislikes) == false, "Content should be eliminated");
+        require(content.likes > content.dislikes, "Likes should be greater than dislikes");
         require(content.likes > (content.dislikes + content.harvestedLikes), "There are no more likes to harvest");
         
         uint64 likesToHarvest = content.likes - content.dislikes - content.harvestedLikes;
