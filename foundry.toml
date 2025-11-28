@@ -10,7 +10,7 @@ remappings = [
 ]
 
 optimizer = true
-optimizer_runs = 1000
+optimizer_runs = 300
 via_ir = true
 
 [fuzz]
