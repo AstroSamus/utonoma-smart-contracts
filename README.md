@@ -52,3 +52,4 @@ Before doing your contributions, we suggest you take a look at the [user stories
 
 ![image](https://blog.utonoma.com/wp-content/uploads/utonoma1x.jpg)
 
+Important note: to run the testing suite you should type: forge test --ffi
